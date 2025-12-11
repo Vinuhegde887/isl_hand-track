@@ -132,6 +132,10 @@ def main():
     current_stable_conf = 0.0
     
     cap = cv2.VideoCapture(0)
+    
+    # Match dataset creator resolution
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     if not cap.isOpened():
         print("Error: Could not open webcam.")
         return

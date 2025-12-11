@@ -58,9 +58,24 @@ def process_video(video_path):
     return video_keypoints
 
 def main():
+    import pickle
+    
     if not os.path.exists(DATA_DIR):
         print(f"Error: Data directory '{DATA_DIR}' not found.")
         return
+
+    CACHE_FILE = "sliding_features_cache.pkl"
+    cached_data = {}
+    
+    # Load Cache
+    if os.path.exists(CACHE_FILE):
+        print(f"Loading cache from {CACHE_FILE}...")
+        try:
+            with open(CACHE_FILE, 'rb') as f:
+                cached_data = pickle.load(f)
+        except Exception as e:
+            print(f"Error loading cache: {e}")
+            cached_data = {}
 
     all_sequences = []
     labels = []
@@ -68,16 +83,33 @@ def main():
     classes = [d for d in os.listdir(DATA_DIR) if os.path.isdir(os.path.join(DATA_DIR, d))]
     print(f"Found classes: {classes}")
 
+    cache_updated = False
+
     for class_name in classes:
         class_path = os.path.join(DATA_DIR, class_name)
         video_files = [f for f in os.listdir(class_path) if f.endswith(('.mp4', '.avi', '.mov'))]
         print(f"Processing class '{class_name}': {len(video_files)} videos")
         
         for video_file in video_files:
+            # Use relative path as key
+            rel_path = os.path.join(class_name, video_file)
             video_path = os.path.join(class_path, video_file)
+            
+            # Check Cache
+            if rel_path in cached_data:
+                full_video_data = cached_data[rel_path]
+            else:
+                print(f"  Extracting {video_file}...")
+                try:
+                    full_video_data = process_video(video_path)
+                    cached_data[rel_path] = full_video_data
+                    cache_updated = True
+                except Exception as e:
+                    print(f"Error processing {video_file}: {e}")
+                    continue
+            
+            # Generate Windows (Fast)
             try:
-                # 1. Get all frames
-                full_video_data = process_video(video_path)
                 total_frames = len(full_video_data)
                 
                 # 2. Extract Sliding Windows
@@ -89,6 +121,7 @@ def main():
                     labels.append(class_name)
                 else:
                     # Slide window
+                    # Use numpy for faster slicing if possible, but list slicing is fine here
                     for start_idx in range(0, total_frames - SEQUENCE_LENGTH + 1, STRIDE):
                         end_idx = start_idx + SEQUENCE_LENGTH
                         window = full_video_data[start_idx:end_idx]
@@ -99,7 +132,13 @@ def main():
                         labels.append(class_name)
                         
             except Exception as e:
-                print(f"Error processing {video_file}: {e}")
+                print(f"Error windowing {video_file}: {e}")
+
+    # Save Cache
+    if cache_updated:
+        print(f"Saving updated cache to {CACHE_FILE}...")
+        with open(CACHE_FILE, 'wb') as f:
+            pickle.dump(cached_data, f)
 
     print(f"Total sequences generated: {len(all_sequences)}")
     print("Creating DataFrame...")
