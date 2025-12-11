@@ -1,4 +1,6 @@
 .venv
+tmp
+__pycache__
 dataset/missing.txt
 dataset/nslt_100.json
 dataset/nslt_300.json
