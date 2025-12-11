@@ -11,7 +11,7 @@ import os
 
 # Configuration
 CSV_PATH = "keypoints_sliding_data.csv" # New dataset
-MODEL_SAVE_PATH = "transformer_sliding.pth" # New model file
+MODEL_SAVE_PATH = "transformer_sliding_window.pth" # New model file
 SEQUENCE_LENGTH = 30
 FEATURES_PER_FRAME = 126
 NUM_EPOCHS = 100 # Adjusted

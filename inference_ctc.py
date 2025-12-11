@@ -31,10 +31,8 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Mapping: Need to know classes to index
 def get_classes():
-    if os.path.exists(DATA_DIR):
-        classes = sorted([d for d in os.listdir(DATA_DIR) if os.path.isdir(os.path.join(DATA_DIR, d))])
-        return classes
-    return ['a', 'hello', 'm', 'name', 'person', 'what']
+    # Hardcoded to match the trained model 'transformer_ctc_refined.pth'
+    return ['a', 'hello', 'm', 'name', 'nothing', 'person', 'what']
 
 def greedy_decode_ctc(logits, vocab, blank_idx):
     """
@@ -53,7 +51,7 @@ def greedy_decode_ctc(logits, vocab, blank_idx):
             decoded_inds.append(k)
             
     # 3. Map to classes
-    result = [vocab[i] for i in decoded_inds]
+    result = [vocab[i] for i in decoded_inds if vocab[i] != 'nothing']
     return " ".join(result)
 
 def main():

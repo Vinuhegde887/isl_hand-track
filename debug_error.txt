@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "D:\dataset\inference_sliding_window.py", line 233, in <module>
+    main()
+  File "D:\dataset\inference_sliding_window.py", line 113, in main
+    model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+  File "D:\dataset\.venv\Lib\site-packages\torch\nn\modules\module.py", line 2584, in load_state_dict
+    raise RuntimeError(
+RuntimeError: Error(s) in loading state_dict for SignLanguageTransformer:
+	size mismatch for fc_out.weight: copying a param with shape torch.Size([6, 128]) from checkpoint, the shape in current model is torch.Size([7, 128]).
+	size mismatch for fc_out.bias: copying a param with shape torch.Size([6]) from checkpoint, the shape in current model is torch.Size([7]).
