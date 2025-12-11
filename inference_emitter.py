@@ -1,3 +1,4 @@
+#inference emitter
 import torch
 import numpy as np
 from collections import deque
@@ -99,7 +100,10 @@ class InferenceEmitter:
         # Background Suppression (assuming 'nothing' or 'background' is a class)
         if token in ['nothing', 'background'] or conf < self.conf_min:
             self._handle_silence(timestamp)
-            return self._check_emission(force_close=False)
+            # CHANGE: If we see silence, we SHOULD finalize the current valid token immediately.
+            if self.current_token is not None:
+                return self._finalize_event()
+            return None
 
         # Debounce Logic
         if token == self.pending_token:

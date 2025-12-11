@@ -19,7 +19,7 @@ FEATURES_PER_FRAME = 126
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Thresholds
-SILENCE_THRESHOLD = 1.0  # Seconds of silence to trigger translation
+SILENCE_THRESHOLD = 2.5  # Seconds of silence to trigger translation
 
 # Re-define Model Architecture (Must match training exactly)
 class PositionalEncoding(nn.Module):
@@ -172,6 +172,8 @@ def main():
             # 1. Handle New Token
             if finalized_event:
                 token = finalized_event['token']
+                if token == 'son':
+                    token = 'father'
                 conf = finalized_event['avg_conf']
                 
                 # Exclude specific noise tokens if needed
@@ -179,14 +181,14 @@ def main():
                     # If we have a previously finalized sentence displayed, clears it when new sign starts
                     # Logic: If draft is empty, we are starting a NEW thought, so clear the OLD final sentence
                     if not draft_tokens: 
-                        final_sentence = "" 
+                        final_sentence = " " 
                         
                     draft_tokens.append(token)
                     draft_confs.append(conf)
                     last_action_time = time.time()
                     print(f"Added token: {token}")
 
-            # 2. Check Silence / Trigger Translation
+            # 2. Check Silence / Trigger Translation (Improved Context)
             if len(draft_tokens) > 0 and not is_translating:
                 time_since_last = time.time() - last_action_time
                 
@@ -199,16 +201,21 @@ def main():
                     tokens_to_send = list(draft_tokens)
                     confs_to_send = list(draft_confs)
                     
-                    # CLEAR BUFFER IMMEDIATELY (Handover)
+                    # Clear buffer for NEW sentence only (User wants fresh start after long pause)
                     draft_tokens.clear()
                     draft_confs.clear()
                     
                     t = threading.Thread(target=gemini_worker, args=(tokens_to_send, confs_to_send, on_translation_done))
-                    t.start()
+                    # t.start()
+                    
+                    # Reset last stable display to avoid confusion
+                    # final_sentence = "Translating..."
             
             # 3. UI Rendering
             # Active recognized token (live, unstable)
             active_tk = emitter.current_token if emitter.current_token else ""
+            if active_tk == 'son':
+                active_tk = 'father'
             
             # Top Bar: Status
             status_text = "Listening..."
@@ -222,7 +229,7 @@ def main():
             
             # Draft Tokens (Yellow)
             draft_str = " ".join(draft_tokens)
-            cv2.putText(frame, f"Draft: {draft_str}", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
+            cv2.putText(frame, f"Draft: {draft_str}", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             
             # Final Sentence (Green) - Swaps/Overlays
             if final_sentence:

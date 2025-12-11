@@ -117,6 +117,8 @@ def main():
     mp_drawing = mp.solutions.drawing_utils
     
     cap = cv2.VideoCapture(0)
+    cap.set(3, 1280)
+    cap.set(4, 720)
     
     print("Camera started. Press 'q' to quit.")
     
@@ -153,9 +155,9 @@ def main():
 
         # UI
         cv2.putText(frame, f"Live: {current_active}", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
-        cv2.putText(frame, f"Last Stable: {last_final_token}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
         
         cv2.imshow('Simple Test', frame)
+        
         
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
